@@ -1,0 +1,9 @@
+{
+  "name": "hyu-proxy-reg-from-lan",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "python3 -m http.server 8000",
+    "check": "node --check app.js && python3 -m py_compile agent/agent.py"
+  }
+}
