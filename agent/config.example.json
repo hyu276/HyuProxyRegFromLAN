@@ -3,8 +3,12 @@
   "agent_id": "",
   "agent_token": "",
   "name": "PC-HUY-01",
+  "lan_ip_override": "",
   "scan_cidr": "auto",
   "ports": [7890, 7891, 1080, 8080, 3128, 8888, 9050],
   "heartbeat_seconds": 10,
-  "scan_timeout_seconds": 0.3
+  "rescan_seconds": 300,
+  "scan_timeout_seconds": 0.3,
+  "scan_workers": 64,
+  "disabled": []
 }
