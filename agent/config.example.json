@@ -1,0 +1,10 @@
+{
+  "api_base": "https://zkrhwqgmynbbmoktokdq.supabase.co/functions/v1/lan-agent-api",
+  "agent_id": "",
+  "agent_token": "",
+  "name": "PC-HUY-01",
+  "scan_cidr": "auto",
+  "ports": [7890, 7891, 1080, 8080, 3128, 8888, 9050],
+  "heartbeat_seconds": 10,
+  "scan_timeout_seconds": 0.3
+}
