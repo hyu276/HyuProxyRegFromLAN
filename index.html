@@ -12,59 +12,158 @@
   <div class="noise"></div>
   <main class="shell">
     <header class="topbar">
-      <div><p class="eyebrow">HYU / NETWORK CONTROL PLANE</p><h1>LAN Proxy Registry</h1></div>
-      <div class="topbar-actions"><span id="connectionPill" class="pill muted">SUPABASE · IDLE</span><button id="signOutBtn" class="button ghost hidden">Sign out</button></div>
+      <div>
+        <p class="eyebrow">HYU / NETWORK CONTROL PLANE</p>
+        <h1>LAN Proxy Registry</h1>
+      </div>
+      <div class="topbar-actions">
+        <span id="connectionPill" class="pill muted">SUPABASE · IDLE</span>
+        <button id="signOutBtn" class="button ghost hidden">Sign out</button>
+      </div>
     </header>
 
     <section id="authView" class="auth-grid">
       <article class="panel hero-panel">
         <p class="eyebrow">OUTBOUND-ONLY AGENT</p>
         <h2>Register LAN proxies without exposing your LAN to the public Internet.</h2>
-        <p class="lede">The agent scans only private-network addresses, validates configured proxy ports, then sends state to Supabase over HTTPS. The dashboard never receives a remote shell.</p>
+        <p class="lede">
+          The agent scans only RFC1918 private-network addresses, validates configured proxy ports,
+          then sends state to Supabase over HTTPS. The dashboard never receives a remote shell.
+        </p>
         <div class="architecture">
           <div class="arch-node">INTERNET</div><div class="arch-line">↓</div>
           <div class="arch-node accent">VERCEL · WEB + API</div><div class="arch-line">↓</div>
           <div class="arch-node">SUPABASE · AUTH / DB / REALTIME</div><div class="arch-line">↑ outbound HTTPS</div>
           <div class="arch-node accent">LAN AGENT · DISCOVER / VALIDATE / HEARTBEAT</div><div class="arch-line">↓</div>
-          <div class="arch-node">192.168.x.x · HTTP / SOCKS5</div>
+          <div class="arch-node">10.x / 172.16–31.x / 192.168.x · HTTP / SOCKS5</div>
         </div>
       </article>
+
       <article class="panel auth-panel">
-        <p class="eyebrow">CONTROL PLANE LOGIN</p><h2>Authenticate</h2>
+        <p class="eyebrow">CONTROL PLANE LOGIN</p>
+        <h2>Authenticate</h2>
         <form id="authForm">
-          <label>Email<input id="emailInput" type="email" autocomplete="email" required placeholder="you@example.com" /></label>
-          <label>Password<input id="passwordInput" type="password" autocomplete="current-password" minlength="6" required placeholder="••••••••" /></label>
-          <div class="row gap"><button class="button primary" type="submit">Sign in</button><button class="button" id="signUpBtn" type="button">Create account</button></div>
-          <p id="authMessage" class="message"></p>
+          <label>
+            Email
+            <input id="emailInput" type="email" autocomplete="email" required placeholder="you@example.com" />
+          </label>
+          <label>
+            Password
+            <input id="passwordInput" type="password" autocomplete="current-password" minlength="6" required placeholder="••••••••" />
+          </label>
+          <div class="row gap">
+            <button class="button primary" type="submit">Sign in</button>
+            <button class="button" id="signUpBtn" type="button">Create account</button>
+          </div>
+          <p id="authMessage" class="message" role="status" aria-live="polite"></p>
         </form>
       </article>
     </section>
 
     <section id="dashboardView" class="hidden">
+      <p id="dashboardMessage" class="message dashboard-message" role="status" aria-live="polite"></p>
+
       <div class="summary-grid">
         <article class="stat"><span>Online agents</span><strong id="statAgents">0</strong></article>
         <article class="stat"><span>Detected proxies</span><strong id="statProxies">0</strong></article>
-        <article class="stat"><span>Healthy proxies</span><strong id="statHealthy">0</strong></article>
+        <article class="stat"><span>Healthy + online</span><strong id="statHealthy">0</strong></article>
         <article class="stat"><span>Realtime</span><strong id="statRealtime">—</strong></article>
       </div>
+
       <div class="dashboard-grid">
         <section class="panel pairing-panel">
-          <div class="section-head"><div><p class="eyebrow">PAIR NEW DEVICE</p><h2>Pairing key</h2></div><button id="generatePairingBtn" class="button primary">Generate key</button></div>
-          <div id="pairingEmpty" class="empty">Generate a one-time key. It expires after 10 minutes.</div>
-          <div id="pairingActive" class="pairing-active hidden"><code id="pairingCode">———— ———— ————</code><button id="copyPairingBtn" class="button ghost">Copy</button><p>Expires <span id="pairingCountdown">—</span></p></div>
-          <div class="command-example"><span>Run in the LAN device</span><code>python agent/agent.py pair --key YOUR_KEY --name PC-HUY-01</code><code>python agent/agent.py run</code></div>
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">PAIR NEW DEVICE</p>
+              <h2>Pairing key</h2>
+            </div>
+            <button id="generatePairingBtn" class="button primary">Generate key</button>
+          </div>
+          <div id="pairingEmpty" class="empty">
+            Generate a one-time key. Creating a new key invalidates the previous unused key.
+            Each key expires after 10 minutes.
+          </div>
+          <div id="pairingActive" class="pairing-active hidden">
+            <code id="pairingCode">———— ———— ————</code>
+            <button id="copyPairingBtn" class="button ghost">Copy</button>
+            <p>Expires <span id="pairingCountdown">—</span></p>
+          </div>
+          <div class="command-example">
+            <span>Run on the physical LAN device (not in Codespaces)</span>
+            <code>python agent/agent.py pair --key YOUR_KEY --name PC-HUY-01</code>
+            <code>python agent/agent.py run</code>
+          </div>
         </section>
-        <section class="panel security-panel"><p class="eyebrow">SECURITY MODEL</p><h2>No inbound public listener</h2><ul><li>Pairing key: one use, 10-minute TTL.</li><li>Agent credential: random token; database stores SHA-256 only.</li><li>Commands: allowlisted structured actions, never shell commands.</li><li>Remote proxy use: prefer a private overlay such as Tailscale.</li></ul></section>
+
+        <section class="panel security-panel">
+          <p class="eyebrow">SECURITY MODEL</p>
+          <h2>No inbound public listener</h2>
+          <ul>
+            <li>Pairing key: one use, 10-minute TTL.</li>
+            <li>Agent credential: random token; database stores SHA-256 only.</li>
+            <li>Commands: allowlisted structured actions, never shell commands.</li>
+            <li>Proxy toggle controls registry state only; it does not stop the proxy process itself.</li>
+            <li>Remote proxy use: prefer a private overlay such as Tailscale.</li>
+          </ul>
+        </section>
       </div>
-      <section class="agents-section"><div class="section-head"><div><p class="eyebrow">LIVE REGISTRY</p><h2>Agents</h2></div><button id="refreshBtn" class="button ghost">Refresh</button></div><div id="agentsEmpty" class="panel empty">No paired agents yet.</div><div id="agentsList" class="agents-list"></div></section>
+
+      <section class="agents-section">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">LIVE REGISTRY</p>
+            <h2>Agents</h2>
+          </div>
+          <button id="refreshBtn" class="button ghost">Refresh</button>
+        </div>
+        <div id="agentsEmpty" class="panel empty">No paired agents yet.</div>
+        <div id="agentsList" class="agents-list"></div>
+      </section>
     </section>
   </main>
 
   <template id="agentTemplate">
     <article class="panel agent-card">
-      <div class="agent-header"><div><div class="row gap"><span class="status-dot"></span><h3 class="agent-name"></h3><span class="agent-status pill"></span></div><p class="agent-meta"></p></div><button class="button ghost rescan-btn">Rescan LAN</button></div>
-      <div class="agent-facts"><div><span>LAN IP</span><strong class="lan-ip">—</strong></div><div><span>Public IP</span><strong class="public-ip">—</strong></div><div><span>Tailscale IP</span><strong class="tailscale-ip">—</strong></div><div><span>Latency</span><strong class="latency">—</strong></div><div><span>Last heartbeat</span><strong class="last-seen">—</strong></div></div>
-      <div class="proxy-table-wrap"><table class="proxy-table"><thead><tr><th>Endpoint</th><th>Protocol</th><th>Health</th><th>Latency</th><th>Enabled</th><th></th></tr></thead><tbody class="proxy-rows"></tbody></table><div class="no-proxies empty hidden">No proxy detected.</div></div>
+      <div class="agent-header">
+        <div>
+          <div class="row gap">
+            <span class="status-dot"></span>
+            <h3 class="agent-name"></h3>
+            <span class="agent-status pill"></span>
+          </div>
+          <p class="agent-meta"></p>
+        </div>
+        <div class="agent-actions">
+          <button class="button ghost rename-agent-btn">Rename</button>
+          <button class="button ghost rescan-btn">Rescan LAN</button>
+          <button class="button ghost danger remove-agent-btn">Remove</button>
+        </div>
+      </div>
+
+      <div class="agent-facts">
+        <div><span>LAN IP</span><strong class="lan-ip">—</strong></div>
+        <div><span>Public IP</span><strong class="public-ip">—</strong></div>
+        <div><span>Tailscale IP</span><strong class="tailscale-ip">—</strong></div>
+        <div><span>Heartbeat RTT</span><strong class="latency">—</strong></div>
+        <div><span>Last heartbeat</span><strong class="last-seen">—</strong></div>
+      </div>
+
+      <div class="proxy-table-wrap">
+        <table class="proxy-table">
+          <thead>
+            <tr>
+              <th>Endpoint</th>
+              <th>Protocol</th>
+              <th>Health</th>
+              <th>Latency</th>
+              <th>Registry</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody class="proxy-rows"></tbody>
+        </table>
+        <div class="no-proxies empty hidden">No proxy detected.</div>
+      </div>
     </article>
   </template>
 
